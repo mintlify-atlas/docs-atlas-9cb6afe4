@@ -1,0 +1,81 @@
+---
+title: "Nivell Enum"
+description: "The Nivell enum defining the three course difficulty levels used throughout the academy system."
+---
+
+`Nivell` is a simple enum that classifies courses by difficulty. It is used as a required parameter when creating courses and is evaluated at enrollment time to enforce age restrictions.
+
+## Enum declaration
+
+```java
+public enum Nivell {
+    INICIAL, INTERMEDI, AVANÇAT
+}
+```
+
+---
+
+## Values
+
+### `INICIAL`
+
+Beginner level. Intended for students with no prior experience. There is no age restriction on enrollment for courses at this level (under the intended logic — see the [Curs bug note](/reference/curs#validaralumne-private)).
+
+### `INTERMEDI`
+
+Intermediate level. Intended for students who have completed or are progressing beyond beginner material. There is no age restriction on enrollment for courses at this level (under the intended logic).
+
+### `AVANÇAT`
+
+Advanced level. Intended for experienced students. Enrollment is restricted to students aged **16 or older**, enforced by `Curs.validarAlumne`:
+
+```java
+// From Curs.validarAlumne (intended logic after bug fix)
+return this.nivell != Nivell.AVANÇAT || alumne.getEdat() >= 16;
+// → false when nivell == AVANÇAT && alumne.getEdat() < 16
+```
+
+Under the intended logic, a student younger than 16 will be blocked from enrolling in any `AVANÇAT` course.
+
+---
+
+## Usage in `Curs`
+
+`Nivell` is passed to the `Curs` constructor and stored in the `nivell` field:
+
+```java
+Curs curs = new Curs("C1", "Piano Inicial", Nivell.INICIAL, instrument);
+```
+
+The `nivell` field is then read inside `validarAlumne` every time `matricular` is called, to decide whether the student's age meets the enrollment requirement.
+
+---
+
+## Usage in `Academia.afegirCurs()`
+
+`Nivell` is a required parameter of `Academia.afegirCurs()`. Passing `null` causes the method to return `false` immediately:
+
+```java
+Academia a = new Academia("AC1", "Acadèmia Harmonia");
+
+a.afegirCurs("C1", "Piano Inicial", Nivell.INICIAL);     // → true
+a.afegirCurs("C2", "Guitarra Intermedi", Nivell.INTERMEDI); // → true
+a.afegirCurs("C3", "Piano Avançat", Nivell.AVANÇAT);     // → true
+a.afegirCurs("C4", "Cant", null);                        // → false (nivell is null)
+```
+
+---
+
+## Enrollment age check context
+
+The following snippet shows where `Nivell.AVANÇAT` appears in `Curs.validarAlumne` as currently written, alongside the intended corrected version:
+
+```java
+// As-coded (buggy — blocks most valid enrollments)
+return this.nivell != Nivell.AVANÇAT && alumne.getEdat() >= 16;
+
+// Intended fix
+return this.nivell != Nivell.AVANÇAT || alumne.getEdat() >= 16;
+```
+
+The corrected `||` expression reads: allow enrollment if the course is not AVANÇAT (any student age is fine) **or** the student is at least 16 (required for AVANÇAT). See the [Curs reference](/reference/curs#validaralumne-private) for the full explanation.

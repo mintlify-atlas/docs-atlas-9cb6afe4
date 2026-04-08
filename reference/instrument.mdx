@@ -1,0 +1,172 @@
+---
+title: "Instrument, Piano & Guitarra"
+description: "Reference for the abstract Instrument class and its concrete subclasses Piano and Guitarra."
+---
+
+The instrument hierarchy consists of the abstract base class `Instrument` and two concrete subclasses: `Piano` and `Guitarra`. Direct construction of `Piano` and `Guitarra` is possible but bypasses the validation enforced by `Academia.afegirPiano()` and `Academia.afegirGuitarra()`. Always prefer the `Academia` factory methods in production code.
+
+---
+
+## Abstract class `Instrument`
+
+```java
+public abstract class Instrument
+```
+
+The base class for all instruments in the system. Defines shared state and enforces that every subclass provides a `descriure()` implementation.
+
+### Fields
+
+| Field | Type | Modifier | Description |
+|---|---|---|---|
+| `codi` | `String` | `protected final` | Unique instrument code. Set once at construction; cannot change. |
+| `nom` | `String` | `protected` | Display name of the instrument. |
+| `preuLloguer` | `double` | `protected` | Rental price per period. |
+
+### Constructor
+
+```java
+public Instrument(String codi, String nom, double preuLloguer)
+```
+
+Called by subclass constructors via `super(...)`. Sets all three shared fields directly — no validation is performed at this level.
+
+### `getCodi()`
+
+```java
+public String getCodi()
+```
+
+Returns the instrument's unique code (`codi`). Used internally by `Academia` when checking for duplicate codes.
+
+### Abstract method: `descriure()`
+
+```java
+public abstract void descriure()
+```
+
+Each concrete subclass must implement this method to print a human-readable description of the instrument to standard output. The method returns `void`.
+
+---
+
+## Class `Piano`
+
+```java
+public class Piano extends Instrument
+```
+
+Represents a piano. Extends `Instrument` with key count and electronic flag.
+
+### Additional fields
+
+| Field | Type | Modifier | Description |
+|---|---|---|---|
+| `numTecles` | `int` | `private` | Number of keys on the piano. |
+| `esElectronic` | `boolean` | `private` | Whether the piano is electronic (`true`) or acoustic (`false`). |
+
+### Constructor
+
+```java
+public Piano(String codi, String nom, double preuLloguer, int numTecles, boolean esElectronic)
+```
+
+Delegates the first three arguments to `Instrument` via `super(codi, nom, preuLloguer)`, then sets `numTecles` and `esElectronic`.
+
+```java
+// Direct construction — no validation
+Piano p = new Piano("P1", "Yamaha C3", 120.0, 88, false);
+
+// Recommended: use Academia factory method (validates all fields)
+academia.afegirPiano("P1", "Yamaha C3", 120.0, 88, false);
+```
+
+### `descriure()`
+
+```java
+@Override
+public void descriure()
+```
+
+Prints the piano's details to standard output in the format:
+
+```
+Piano: <nom> <numTecles> <esElectronic>
+```
+
+Example output for a piano named `"Yamaha C3"` with 88 keys that is not electronic:
+
+```
+Piano: Yamaha C3 88 false
+```
+
+---
+
+## Class `Guitarra`
+
+```java
+public class Guitarra extends Instrument
+```
+
+Represents a guitar. Extends `Instrument` with string type and an amplifier flag that is always initialized to `false`.
+
+### Additional fields
+
+| Field | Type | Modifier | Description |
+|---|---|---|---|
+| `tipusCordes` | `String` | `private` | Type of strings (e.g. `"nylon"`, `"acer"`). |
+| `teAmplificador` | `boolean` | `private` | Whether the guitar has an amplifier. Always `false` at construction; no setter is provided. |
+
+### Constructor
+
+```java
+public Guitarra(String codi, String nom, double preuLloguer, String tipusCordes)
+```
+
+Delegates the first three arguments to `Instrument` via `super(codi, nom, preuLloguer)`, sets `tipusCordes`, and hard-codes `teAmplificador = false`.
+
+```java
+// Direct construction — no validation
+Guitarra g = new Guitarra("G1", "Fender Classic", 80.0, "nylon");
+
+// Recommended: use Academia factory method (validates all fields)
+academia.afegirGuitarra("G1", "Fender Classic", 80.0, "nylon");
+```
+
+### `descriure()`
+
+```java
+@Override
+public void descriure()
+```
+
+Prints the guitar's details to standard output in the format:
+
+```
+Guitarra: <nom> <tipusCordes>
+```
+
+Example output for a guitar named `"Fender Classic"` with nylon strings:
+
+```
+Guitarra: Fender Classic nylon
+```
+
+---
+
+## Class diagram
+
+```
+Instrument  (abstract)
+├── getCodi() : String
+└── descriure() : void  [abstract]
+    │
+    ├── Piano
+    │   ├── numTecles : int
+    │   ├── esElectronic : boolean
+    │   └── descriure() → "Piano: nom numTecles esElectronic"
+    │
+    └── Guitarra
+        ├── tipusCordes : String
+        ├── teAmplificador : boolean (always false)
+        └── descriure() → "Guitarra: nom tipusCordes"
+```

@@ -1,0 +1,263 @@
+---
+title: "Academia"
+description: "Full method reference for the Academia class — the central registry of instruments, courses, and professors."
+---
+
+The `Academia` class is the top-level entity in the music academy management system. It owns and manages three collections: a list of instruments (`List<Instrument>`), a list of courses (`List<Curs>`), and a map of professors keyed by DNI (`Map<String, Profesor>`).
+
+## Constructor
+
+```java
+public Academia(String codi, String nom)
+```
+
+Creates a new academy with the given code and name. All three collections (`instruments`, `cursos`, `professors`) are initialized as empty.
+
+```java
+Academia a = new Academia("AC1", "Acadèmia Harmonia");
+```
+
+---
+
+## Methods
+
+### `afegirPiano`
+
+```java
+public boolean afegirPiano(String codi, String nom, double preuLloguer, int numTecles, boolean esElectronic)
+```
+
+Validates and adds a new `Piano` to the academy's instrument list.
+
+<ParamField path="codi" type="String" required>
+  Unique identifier for the piano. Must be non-null and non-empty. Must not already exist in the instruments list.
+</ParamField>
+
+<ParamField path="nom" type="String" required>
+  Display name for the piano. Must be non-null and non-empty.
+</ParamField>
+
+<ParamField path="preuLloguer" type="double" required>
+  Rental price. Must be greater than `0`.
+</ParamField>
+
+<ParamField path="numTecles" type="int" required>
+  Number of keys on the piano. Must be greater than `0`.
+</ParamField>
+
+<ParamField path="esElectronic" type="boolean" required>
+  Whether the piano is electronic (`true`) or acoustic (`false`).
+</ParamField>
+
+**Returns** `true` if the piano was successfully added; `false` if any of the following validation rules fail:
+
+- `codi` or `nom` is `null` or empty
+- `preuLloguer` is `<= 0`
+- `numTecles` is `<= 0`
+- An instrument with the same `codi` already exists in the list
+
+```java
+Academia a = new Academia("AC1", "Acadèmia Harmonia");
+
+boolean ok = a.afegirPiano("P1", "Yamaha C3", 120.0, 88, false);
+// ok → true
+
+boolean duplicate = a.afegirPiano("P1", "Steinway", 200.0, 88, false);
+// duplicate → false (codi "P1" already exists)
+
+boolean badPrice = a.afegirPiano("P2", "Roland FP", -10.0, 88, true);
+// badPrice → false (preuLloguer <= 0)
+```
+
+---
+
+### `afegirGuitarra`
+
+```java
+public boolean afegirGuitarra(String codi, String nom, double preuLloguer, String tipusCordes)
+```
+
+Validates and adds a new `Guitarra` to the academy's instrument list.
+
+<ParamField path="codi" type="String" required>
+  Unique identifier for the guitar. Must be non-null and non-empty. Must not already exist in the instruments list.
+</ParamField>
+
+<ParamField path="nom" type="String" required>
+  Display name for the guitar. Must be non-null and non-empty.
+</ParamField>
+
+<ParamField path="preuLloguer" type="double" required>
+  Rental price. Must be greater than `0`.
+</ParamField>
+
+<ParamField path="tipusCordes" type="String" required>
+  String type (e.g. `"nylon"`, `"acer"`). Must be non-null and non-empty.
+</ParamField>
+
+**Returns** `true` if the guitar was successfully added; `false` if any of the following validation rules fail:
+
+- `codi`, `nom`, or `tipusCordes` is `null` or empty
+- `preuLloguer` is `<= 0`
+- An instrument with the same `codi` already exists in the list
+
+```java
+boolean ok = a.afegirGuitarra("G1", "Fender Classic", 80.0, "nylon");
+// ok → true
+
+boolean noStrings = a.afegirGuitarra("G2", "Gibson", 90.0, "");
+// noStrings → false (tipusCordes is empty)
+```
+
+---
+
+### `afegirCurs`
+
+```java
+public boolean afegirCurs(String codi, String nom, Nivell nivell)
+```
+
+Validates and adds a new `Curs` to the academy's course list.
+
+<ParamField path="codi" type="String" required>
+  Unique identifier for the course. Must be non-null and non-empty. Must not already exist in the course list.
+</ParamField>
+
+<ParamField path="nom" type="String" required>
+  Display name for the course. Must be non-null and non-empty.
+</ParamField>
+
+<ParamField path="nivell" type="Nivell" required>
+  Difficulty level of the course (`Nivell.INICIAL`, `Nivell.INTERMEDI`, or `Nivell.AVANÇAT`). Must not be `null`.
+</ParamField>
+
+**Returns** `true` if the course was successfully added; `false` if any of the following validation rules fail:
+
+- `codi` or `nom` is `null` or empty
+- `nivell` is `null`
+- A course with the same `codi` already exists
+
+```java
+boolean ok = a.afegirCurs("C1", "Piano Inicial", Nivell.INICIAL);
+// ok → true
+
+boolean duplicate = a.afegirCurs("C1", "Piano Avançat", Nivell.AVANÇAT);
+// duplicate → false (codi "C1" already exists)
+
+boolean noLevel = a.afegirCurs("C2", "Guitarra", null);
+// noLevel → false (nivell is null)
+```
+
+---
+
+### `afegirProfesor`
+
+```java
+public boolean afegirProfesor(String nom, String dni, String especialitat)
+```
+
+Validates and registers a new `Profesor` in the academy's professors map, keyed by DNI.
+
+<ParamField path="nom" type="String" required>
+  Full name of the professor. Must be non-null and non-empty.
+</ParamField>
+
+<ParamField path="dni" type="String" required>
+  National identity number of the professor. Must be non-null and non-empty. Must not already exist as a key in the professors map.
+</ParamField>
+
+<ParamField path="especialitat" type="String" required>
+  Teaching specialty (e.g. `"Piano"`, `"Cant"`). Must be non-null and non-empty.
+</ParamField>
+
+**Returns** `true` if the professor was added; `false` if any of the following validation rules fail:
+
+- `nom`, `dni`, or `especialitat` is `null` or empty
+- A professor with the same `dni` already exists
+
+```java
+boolean ok = a.afegirProfesor("Marta Gil", "444D", "Cant");
+// ok → true
+
+boolean duplicate = a.afegirProfesor("Joan Serra", "444D", "Piano");
+// duplicate → false (dni "444D" already registered)
+```
+
+---
+
+### `getInstrument`
+
+```java
+public Instrument getInstrument(int posicio)
+```
+
+Returns the instrument at the given zero-based index in the instruments list.
+
+<ParamField path="posicio" type="int" required>
+  Zero-based position in the instruments list.
+</ParamField>
+
+**Returns** the `Instrument` at `posicio`; `null` if `posicio < 0` or `posicio >= instruments.size()`.
+
+```java
+a.afegirPiano("P1", "Yamaha C3", 120.0, 88, false);
+a.afegirGuitarra("G1", "Fender Classic", 80.0, "nylon");
+
+Instrument first = a.getInstrument(0);  // → the Piano "P1"
+Instrument second = a.getInstrument(1); // → the Guitarra "G1"
+Instrument bad = a.getInstrument(5);    // → null (out of bounds)
+```
+
+---
+
+### `getProfesor`
+
+```java
+public Profesor getProfesor(String dni)
+```
+
+Looks up a professor by DNI in the professors map.
+
+<ParamField path="dni" type="String" required>
+  The DNI key to look up.
+</ParamField>
+
+**Returns** the `Profesor` whose DNI matches `dni`; `null` if no professor with that DNI exists. When the professor is not found, a message is also printed to standard output:
+
+```
+No se ha encontrado al  profesor con el dni <dni>
+```
+
+```java
+a.afegirProfesor("Marta Gil", "444D", "Cant");
+
+Profesor p = a.getProfesor("444D");  // → Profesor instance
+Profesor missing = a.getProfesor("999Z"); // → null, prints not-found message
+```
+
+---
+
+### `eliminarProfessor`
+
+```java
+public boolean eliminarProfessor(String dni)
+```
+
+Removes the professor with the given DNI from the professors map.
+
+<ParamField path="dni" type="String" required>
+  The DNI of the professor to remove.
+</ParamField>
+
+**Returns** `true` if the professor was found and removed; `false` if no professor with that DNI exists. When not found, a message is also printed to standard output:
+
+```
+No se ha encontrado al  profesor con el dni <dni>
+```
+
+```java
+a.afegirProfesor("Marta Gil", "444D", "Cant");
+
+boolean removed = a.eliminarProfessor("444D");  // → true
+boolean missing = a.eliminarProfessor("444D");  // → false (already removed), prints message
+```

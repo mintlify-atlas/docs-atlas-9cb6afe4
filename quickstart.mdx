@@ -1,80 +1,161 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Compile and run the Exercici Implementació Repàs project from source in two commands."
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
+- **Java JDK 8 or later** installed and available on your `PATH`. Verify with:
 
-### Step 1: Set up your local environment
+```bash
+java -version
+javac -version
+```
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+Both commands should print a version number. If either is missing, install the JDK for your platform from [adoptium.net](https://adoptium.net) or your system package manager.
 
-### Step 2: Deploy your changes
+## Get the source
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+Clone the repository or download the zip from GitHub:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+```bash
+git clone https://github.com/Zafiro2004/EjercicioImplementacionRepaso.git
+cd EjercicioImplementacionRepaso
+```
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+All source files live under `src/`:
 
-### Step 3: Go live
+```
+src/
+├── Academia.java
+├── Alumne.java
+├── Avaluable.java
+├── Curs.java
+├── Guitarra.java
+├── Instrument.java
+├── Main.java
+├── Nivell.java
+├── Piano.java
+├── Profesor.java
+└── ServeiNotificacions.java
+```
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+## Compile and run
 
-## Next steps
+<Steps>
+  <Step title="Create an output directory">
+    Create a directory to hold the compiled `.class` files:
 
-Now that you have your docs running, explore these key features:
+    ```bash
+    mkdir -p out
+    ```
+  </Step>
 
-<CardGroup cols={2}>
+  <Step title="Compile all source files">
+    Compile every `.java` file in `src/` and place the output in `out/`:
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+    ```bash
+    javac -d out src/*.java
+    ```
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+    If compilation succeeds you will see no output and `out/` will contain `.class` files for every class. Any compilation errors will be printed to stderr with the file name and line number.
+  </Step>
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+  <Step title="Run the test runner">
+    Execute `Main` with the compiled classes on the classpath:
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+    ```bash
+    java -cp out Main
+    ```
+  </Step>
+</Steps>
 
-</CardGroup>
+## Source bugs — fix before compiling
+
+<Warning>
+The source code as committed contains **compile-time errors** that must be fixed before `javac` will succeed:
+
+1. **`Curs.calcularNotaFinal` return type mismatch** — The method is declared `public boolean calcularNotaFinal()` but the `Avaluable` interface requires `double`. The return statement also has a syntax error (`return 0.0}` — missing semicolon). Fix:
+
+   ```java
+   @Override
+   public double calcularNotaFinal() {
+       return 0.0;
+   }
+   ```
+
+2. **`Curs` constructor arity mismatch** — The only `Curs` constructor requires four arguments (`codi`, `nom`, `nivell`, `instrument`), but `Main.java` constructs `Curs` objects with three arguments (no `Instrument`). Either add a three-argument constructor to `Curs`, or update all call sites to pass an `Instrument`.
+</Warning>
+
+Once both errors are fixed, compilation and execution proceed normally.
+
+## Expected output
+
+`Main` prints a header, one section per test method, and a final summary. With both source bugs fixed, the output looks like:
+
+```text
+=== Proves UML -> codi (consola) ===
+
+--- Tests Academia.afegirPiano ---
+[PASS] Afegir piano válido
+[PASS] No permite codi null
+[PASS] No permite codi vacío
+[PASS] No permite nom null
+[PASS] No permite nom vacío
+[PASS] No permite preuLloguer = 0
+[PASS] No permite preuLloguer negativo
+[PASS] No permite numTecles = 0
+[PASS] No permite numTecles negativo
+[PASS] No permite codi de instrumento duplicado
+
+--- Tests Academia.afegirGuitarra ---
+[PASS] Afegir guitarra válida
+...
+
+--- Tests Curs.matricular ---
+[FAIL] Matricula alumno válido en nivel inicial
+...
+[FAIL] No permite matricular menor de 16 en nivel avanzado
+[FAIL] Permite matricular alumno de 16 o más en nivel avanzado
+...
+
+--- Tests Curs.calcularNotaFinal ---
+[PASS] La nota final actual es 0.0
+
+=== RESULTAT ===
+PASS: <n>
+FAIL: <m>
+```
+
+The `Curs.matricular` tests will produce several `[FAIL]` results because of the inverted `validarAlumne` condition (see the note below). All other sections should pass once the compile errors are resolved.
+
+Each `[PASS]` line increments the `ok` counter; each `[FAIL]` line increments `ko`. The summary at the end reflects the totals across all ten test methods.
+
+## What each test group covers
+
+| Test method | Classes exercised | What is checked |
+|---|---|---|
+| `provarAcademiaAfegirPiano` | `Academia`, `Piano` | All null/empty/zero/negative guard conditions on `afegirPiano`, plus duplicate `codi` rejection |
+| `provarAcademiaAfegirGuitarra` | `Academia`, `Guitarra` | Same guards for `afegirGuitarra`, plus null/empty `tipusCordes` |
+| `provarAcademiaAfegirCurs` | `Academia`, `Curs`, `Nivell` | Null/empty guards, duplicate `codi`, and null `Nivell` rejection |
+| `provarAcademiaAfegirProfesor` | `Academia`, `Profesor` | Null/empty guards on `nom`, `dni`, `especialitat`, plus duplicate DNI rejection |
+| `provarAcademiaGetInstrument` | `Academia`, `Instrument` | Index-based retrieval returns the correct object; negative and out-of-range indices return `null` |
+| `provarAcademiaGetProfesorIEliminar` | `Academia`, `Profesor` | DNI-based lookup, successful deletion, idempotent deletion attempt |
+| `provarAlumne` | `Alumne` | `getNom()`, `getDni()`, and `getEdat()` return the values passed to the constructor |
+| `provarProfesor` | `Profesor` | `getDni()` returns the value passed to the constructor |
+| `provarCursMatricular` | `Curs`, `Alumne`, `Nivell` | Valid enrollment, duplicate DNI guard, null guard, age restriction for `AVANÇAT`, null `Nivell` behavior |
+| `provarCursCalcularNotaFinal` | `Curs`, `Avaluable` | Current return value of the `calcularNotaFinal` implementation |
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  **Two known issues in the current source:**
+
+  1. **`calcularNotaFinal` is not implemented.** `Curs.calcularNotaFinal()` currently returns `0.0` (the body contains a syntax error: `return 0.0}` with a misplaced brace). The test in `provarCursCalcularNotaFinal` is written to assert `== 0.0` precisely because that is the current behaviour — it is not asserting a correct grade calculation.
+
+  2. **`validarAlumne` has an inverted condition for `AVANÇAT`.** In `Curs.java`, the guard is written as:
+
+     ```java
+     return this.nivell != Nivell.AVANÇAT && alumne.getEdat() >= 16;
+     ```
+
+     This means a student aged 16 or over is **rejected** when the level is `AVANÇAT` (because `nivell != AVANÇAT` is `false`) and **accepted** in every other level regardless of age. The intended logic is the opposite: only allow enrollment in `AVANÇAT` courses if the student is at least 16. The tests `provarCursMatricular` will show `[FAIL]` for the two AVANÇAT age checks until this condition is corrected.
 </Note>

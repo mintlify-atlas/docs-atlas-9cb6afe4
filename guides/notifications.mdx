@@ -1,0 +1,68 @@
+---
+title: "Enrollment Notifications"
+description: "How the notification service works when students enroll"
+---
+
+`ServeiNotificacions` is a static utility class with a single static method. It has no instance state and is never instantiated — all interaction goes through the class name directly.
+
+## Method signature
+
+```java
+public static void enviarConfirmacio(Alumne a, String nomCurs)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `a` | `Alumne` | The student who was just enrolled |
+| `nomCurs` | `String` | The `nom` field of the course they enrolled in |
+
+## Output format
+
+The method calls `System.out.printf` with a text block and produces exactly two lines:
+
+```
+Nom de l'alumne: <student name>
+Nom del curs: <course name>
+```
+
+The values are taken directly from `a.getNom()` and `nomCurs`. No additional formatting, no timestamp, no status code.
+
+## Where it is called
+
+`enviarConfirmacio` is invoked inside `Curs.matricular` **only after** `validarAlumne` returns `true`. You never need to call it manually.
+
+```java
+// Curs.java
+public boolean matricular(Alumne alumne) {
+    if (!validarAlumne(alumne)) {
+        return false;
+    }
+    alumnes.put(alumne.getDni(), alumne);
+    ServeiNotificacions.enviarConfirmacio(alumne, this.nom);  // automatic
+    return true;
+}
+```
+
+The call is inside the success path, after the student has been added to the `alumnes` map. If `validarAlumne` returns `false` for any reason — null student, duplicate DNI, or age below 16 for an `AVANÇAT` course — the method returns `false` before reaching this line and no notification is sent.
+
+## Concrete example
+
+Enrolling "Clara" (DNI `"A4"`, age 16) in a course named `"Avançat"`:
+
+```java
+Curs cursAvancat = new Curs("C3", "Avançat", Nivell.AVANÇAT, null);
+Alumne major = new Alumne("Clara", "A4", 16);
+
+cursAvancat.matricular(major); // triggers enviarConfirmacio internally
+```
+
+Produces the following output:
+
+```
+Nom de l'alumne: Clara
+Nom del curs: Avançat
+```
+
+## No error notifications
+
+There is no counterpart method for failed enrollments. `ServeiNotificacions` only exposes `enviarConfirmacio`, and that method is only reachable on the success path in `Curs.matricular`. Rejected enrollments produce no output from `ServeiNotificacions` — if you need to surface failure reasons, inspect the `boolean` return value of `matricular` in the calling code.

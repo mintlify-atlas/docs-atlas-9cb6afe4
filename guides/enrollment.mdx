@@ -1,0 +1,117 @@
+---
+title: "Enrolling Students"
+description: "How to enroll students in courses with level-based restrictions"
+---
+
+Enrollment links an `Alumne` to a `Curs` via `Curs.matricular(Alumne alumne)`. The method runs validation, stores the student in the course's internal `alumnes` map (keyed by DNI), fires a notification, and returns `true`. If validation fails for any reason, nothing is stored and the method returns `false`.
+
+## Course levels
+
+Every `Curs` is assigned one of three `Nivell` values at construction time. The level controls who may enroll.
+
+| `Nivell` | Minimum age | Description |
+|----------|-------------|-------------|
+| `INICIAL` | None | Open to students of any age |
+| `INTERMEDI` | None | Open to students of any age |
+| `AVANÇAT` | 16 | Rejects students whose `getEdat()` returns a value below 16 |
+
+The age check is performed inside `Curs.validarAlumne` and only activates when `nivell == Nivell.AVANÇAT`.
+
+## Complete enrollment flow
+
+<Steps>
+  <Step title="Create an Alumne">
+    Construct an `Alumne` with a name, a unique DNI, and an age.
+
+    ```java
+    Alumne alumne = new Alumne("Clara", "A4", 16);
+    ```
+  </Step>
+
+  <Step title="Obtain a Curs">
+    Either create a `Curs` directly, or retrieve one previously registered with `Academia.afegirCurs`. The course must have its `Nivell` set correctly at construction time. The `Curs` constructor requires four arguments — include an `Instrument` (or `null` if not yet assigned):
+
+    ```java
+    Curs curs = new Curs("C3", "Avançat", Nivell.AVANÇAT, null);
+    ```
+  </Step>
+
+  <Step title="Call matricular">
+    Pass the `Alumne` instance to `curs.matricular(alumne)`. The method handles all validation internally.
+
+    ```java
+    boolean enrolled = curs.matricular(alumne);
+    ```
+  </Step>
+
+  <Step title="Check the return value">
+    `true` means the student was added to the course and a confirmation notification was sent. `false` means validation failed — the course's `alumnes` map is unchanged.
+
+    ```java
+    if (enrolled) {
+        // ServeiNotificacions.enviarConfirmacio was called automatically
+    } else {
+        // student was not added; inspect the course level and student data
+    }
+    ```
+  </Step>
+</Steps>
+
+## Examples
+
+<Tabs>
+  <Tab title="Successful enrollments">
+    ```java
+    // INICIAL — no age restriction, any student qualifies
+    Curs cursInicial = new Curs("C1", "Iniciació", Nivell.INICIAL, null);
+    Alumne alumne1 = new Alumne("Anna", "A1", 10);
+
+    cursInicial.matricular(alumne1); // returns true
+
+    // INTERMEDI — no age restriction
+    Curs cursIntermedi = new Curs("C2", "Intermedi", Nivell.INTERMEDI, null);
+    Alumne alumne2 = new Alumne("Pau", "A2", 8);
+
+    cursIntermedi.matricular(alumne2); // returns true
+
+    // AVANÇAT — student is exactly 16, meets the minimum
+    Curs cursAvancat = new Curs("C3", "Avançat", Nivell.AVANÇAT, null);
+    Alumne major = new Alumne("Clara", "A4", 16);
+
+    cursAvancat.matricular(major); // returns true
+    ```
+
+    Each successful call also triggers a printed confirmation via `ServeiNotificacions`. See [Enrollment Notifications](/guides/notifications).
+  </Tab>
+
+  <Tab title="Rejected enrollments">
+    ```java
+    // Rejected — student is 15, below the AVANÇAT minimum of 16
+    Curs cursAvancat = new Curs("C3", "Avançat", Nivell.AVANÇAT, null);
+    Alumne menor = new Alumne("Nil", "A3", 15);
+
+    cursAvancat.matricular(menor); // returns false
+
+    // Rejected — null reference
+    cursInicial.matricular(null); // returns false
+
+    // Rejected — DNI "A1" is already enrolled in cursInicial
+    Alumne alumneDuplicat = new Alumne("Anna 2", "A1", 12);
+    cursInicial.matricular(alumneDuplicat); // returns false
+    ```
+
+    No notification is sent for rejected enrollments. The `alumnes` map remains unchanged.
+  </Tab>
+</Tabs>
+
+## Duplicate prevention
+
+The `alumnes` field in `Curs` is a `HashMap<String, Alumne>` keyed by DNI. `validarAlumne` calls `this.alumnes.containsKey(alumne.getDni())` before accepting any enrollment. Two students with different names but the same DNI string are treated as duplicates — the second call is rejected regardless of which `Alumne` object is passed.
+
+```java
+Alumne original  = new Alumne("Anna",   "A1", 10);
+Alumne duplicate = new Alumne("Anna 2", "A1", 12); // same DNI "A1"
+
+cursInicial.matricular(original);   // true  — "A1" not yet in map
+cursInicial.matricular(duplicate);  // false — "A1" already in map
+```

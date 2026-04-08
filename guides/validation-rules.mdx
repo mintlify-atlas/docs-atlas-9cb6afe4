@@ -1,0 +1,182 @@
+---
+title: "Validation Rules"
+description: "Input validation rules applied to all entity creation methods"
+---
+
+Every `add` method in `Academia` delegates to a private validator before constructing the object. A validator that returns `false` causes the public method to return `false` immediately — nothing is added to any collection. The rules are enforced at the point of creation; there is no separate validation step.
+
+<AccordionGroup>
+
+  <Accordion title="Instrument (Piano & Guitarra)">
+    Both `afegirPiano` and `afegirGuitarra` call the shared private method `validarInstrument(String codi, String nom, double preuLloguer)` before checking type-specific fields.
+
+    **Shared rules — `validarInstrument`**
+
+    | Field | Rule |
+    |-------|------|
+    | `codi` | Must not be `null` or empty |
+    | `nom` | Must not be `null` or empty |
+    | `preuLloguer` | Must be `> 0` (zero and negative values are rejected) |
+    | `codi` uniqueness | Iterates `instruments` list; rejects if any existing instrument's `getCodi()` equals `codi` |
+
+    **Piano-specific** (checked after `validarInstrument` passes)
+
+    | Field | Rule |
+    |-------|------|
+    | `numTecles` | Must be `> 0` |
+
+    `esElectronic` is a boolean and carries no validation constraint.
+
+    **Guitarra-specific** (checked after `validarInstrument` passes)
+
+    | Field | Rule |
+    |-------|------|
+    | `tipusCordes` | Must not be `null` or empty |
+
+    ```java
+    // Passes — all fields valid, codi "P1" not yet registered
+    check(a.afegirPiano("P1", "Yamaha", 25.0, 88, true), "Afegir piano válido");
+
+    // Fails — codi is null
+    check(!a.afegirPiano(null, "Yamaha2", 20.0, 88, false), "No permite codi null");
+
+    // Fails — codi is empty string
+    check(!a.afegirPiano("", "Yamaha2", 20.0, 88, false), "No permite codi vacío");
+
+    // Fails — nom is null
+    check(!a.afegirPiano("P2", null, 20.0, 88, false), "No permite nom null");
+
+    // Fails — nom is empty string
+    check(!a.afegirPiano("P2", "", 20.0, 88, false), "No permite nom vacío");
+
+    // Fails — preuLloguer is zero
+    check(!a.afegirPiano("P2", "Casio", 0.0, 88, false), "No permite preuLloguer = 0");
+
+    // Fails — preuLloguer is negative
+    check(!a.afegirPiano("P2", "Casio", -5.0, 88, false), "No permite preuLloguer negativo");
+
+    // Fails — numTecles is zero
+    check(!a.afegirPiano("P2", "Casio", 20.0, 0, false), "No permite numTecles = 0");
+
+    // Fails — numTecles is negative
+    check(!a.afegirPiano("P2", "Casio", 20.0, -1, false), "No permite numTecles negativo");
+
+    // Fails — "P1" already exists in the instruments list
+    check(!a.afegirPiano("P1", "Duplicat", 20.0, 61, false), "No permite codi de instrumento duplicado");
+
+    // Guitarra — passes
+    check(a.afegirGuitarra("G1", "Fender", 18.0, "niló"), "Afegir guitarra válida");
+
+    // Guitarra — fails: tipusCordes is null
+    check(!a.afegirGuitarra("G2", "Gibson", 18.0, null), "No permite tipusCordes null");
+
+    // Guitarra — fails: tipusCordes is empty
+    check(!a.afegirGuitarra("G2", "Gibson", 18.0, ""), "No permite tipusCordes vacío");
+    ```
+  </Accordion>
+
+  <Accordion title="Course (Curs)">
+    `afegirCurs` calls the private method `validarCurs(String codi, String nom, Nivell nivell)`.
+
+    | Field | Rule |
+    |-------|------|
+    | `codi` | Must not be `null` or empty |
+    | `nom` | Must not be `null` or empty |
+    | `nivell` | Must not be `null` |
+    | `codi` uniqueness | Iterates `cursos` list; rejects if any existing course's `getCodi()` equals `codi` |
+
+    ```java
+    // Passes — all fields valid, "C1" not yet registered
+    check(a.afegirCurs("C1", "Piano Inicial", Nivell.INICIAL), "Afegir curs válido");
+
+    // Fails — codi is null
+    check(!a.afegirCurs(null, "Curs 2", Nivell.INTERMEDI), "No permite codi null");
+
+    // Fails — codi is empty string
+    check(!a.afegirCurs("", "Curs 2", Nivell.INTERMEDI), "No permite codi vacío");
+
+    // Fails — nom is null
+    check(!a.afegirCurs("C2", null, Nivell.INTERMEDI), "No permite nom null");
+
+    // Fails — nom is empty string
+    check(!a.afegirCurs("C2", "", Nivell.INTERMEDI), "No permite nom vacío");
+
+    // Fails — "C1" already exists in the cursos list
+    check(!a.afegirCurs("C1", "Curs duplicat", Nivell.AVANÇAT), "No permite codi de curs duplicado");
+
+    // Fails — nivell is null
+    check(!a.afegirCurs("C3", "Curs nivell null", null), "Actualmente no permite nivell null");
+    ```
+  </Accordion>
+
+  <Accordion title="Teacher (Profesor)">
+    `afegirProfesor` calls the private method `validarProfesor(String nom, String dni, String especialitat)`.
+
+    | Field | Rule |
+    |-------|------|
+    | `nom` | Must not be `null` or empty |
+    | `dni` | Must not be `null` or empty |
+    | `especialitat` | Must not be `null` or empty |
+    | `dni` uniqueness | Rejects if `professors` HashMap already contains `dni` as a key |
+
+    Uniqueness is enforced via HashMap key lookup (`containsKey`), which is O(1) — unlike the linear scan used for instruments and courses.
+
+    ```java
+    // Passes — all fields valid, "111A" not yet registered
+    check(a.afegirProfesor("Joan", "111A", "Piano"), "Afegir profesor válido");
+
+    // Fails — nom is null
+    check(!a.afegirProfesor(null, "222B", "Guitarra"), "No permite nom null");
+
+    // Fails — nom is empty string
+    check(!a.afegirProfesor("", "222B", "Guitarra"), "No permite nom vacío");
+
+    // Fails — dni is null
+    check(!a.afegirProfesor("Maria", null, "Guitarra"), "No permite dni null");
+
+    // Fails — dni is empty string
+    check(!a.afegirProfesor("Maria", "", "Guitarra"), "No permite dni vacío");
+
+    // Fails — especialitat is null
+    check(!a.afegirProfesor("Maria", "222B", null), "No permite especialitat null");
+
+    // Fails — especialitat is empty string
+    check(!a.afegirProfesor("Maria", "222B", ""), "No permite especialitat vacía");
+
+    // Fails — "111A" already registered as a professor
+    check(!a.afegirProfesor("Pere", "111A", "Violí"), "No permite dni duplicado");
+    ```
+  </Accordion>
+
+  <Accordion title="Enrollment (Curs.validarAlumne)">
+    `Curs.matricular(Alumne alumne)` calls the private method `validarAlumne(Alumne alumne)` before adding the student.
+
+    | Condition | Rule |
+    |-----------|------|
+    | `alumne` reference | Must not be `null` |
+    | `alumne.getDni()` uniqueness | `alumnes` map must not already contain this DNI as a key |
+    | Age for `Nivell.AVANÇAT` | `alumne.getEdat()` must be `>= 16` |
+
+    Courses at `Nivell.INICIAL` and `Nivell.INTERMEDI` have no age restriction. See [Enrolling Students](/guides/enrollment) for a full walkthrough.
+
+    ```java
+    Curs cursAvancat = new Curs("C3", "Avançat", Nivell.AVANÇAT, null);
+    Alumne menor = new Alumne("Nil", "A3", 15);
+    Alumne major = new Alumne("Clara", "A4", 16);
+
+    // Fails — age 15 is below the AVANÇAT minimum of 16
+    check(!cursAvancat.matricular(menor), "No permite matricular menor de 16 en nivel avanzado");
+
+    // Passes — age 16 meets the minimum
+    check(cursAvancat.matricular(major), "Permite matricular alumno de 16 o más en nivel avanzado");
+
+    // Fails — null reference
+    check(!cursInicial.matricular(null), "No permite matricular null");
+
+    // Fails — DNI "A1" already enrolled
+    Alumne alumneDuplicat = new Alumne("Anna 2", "A1", 12);
+    check(!cursInicial.matricular(alumneDuplicat), "No permite matricular alumno con dni duplicado");
+    ```
+  </Accordion>
+
+</AccordionGroup>

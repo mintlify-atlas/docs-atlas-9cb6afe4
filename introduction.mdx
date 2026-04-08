@@ -1,0 +1,103 @@
+---
+title: "Introduction"
+description: "An overview of the Exercici Implementació Repàs Java OOP project — a music academy management system."
+---
+
+## What is this project?
+
+**Exercici Implementació Repàs** is a Java exercise that models a music academy (`Academia`) capable of managing instruments, courses, students, and teachers. The goal is to translate a UML class diagram directly into working Java code, then verify that implementation against a set of manual assertion tests in `Main.java`.
+
+The project is not a framework exercise — there is no Spring, no persistence layer, and no UI. It is a focused OOP drill covering the full spectrum of core Java design concepts in a single, self-contained codebase.
+
+## Purpose
+
+The exercise practises the following OOP concepts:
+
+- **Inheritance** — `Piano` and `Guitarra` extend the abstract `Instrument` class, inheriting shared fields (`codi`, `nom`, `preuLloguer`) while providing concrete implementations of `descriure()`.
+- **Abstract classes** — `Instrument` defines the contract and shared state for all instruments without being instantiable itself.
+- **Interfaces** — `Curs` implements the `Avaluable` interface, which requires a `calcularNotaFinal()` method returning a `double`.
+- **Enums** — `Nivell` (values: `INICIAL`, `INTERMEDI`, `AVANÇAT`) enforces a closed set of course levels and is used in enrollment validation logic.
+- **Encapsulation** — all fields are `private` (or `protected` on `Instrument`); access goes through getters and controlled mutation methods.
+- **Validation** — `Academia` guards every `afegir*` method against null/empty fields, non-positive numeric values, and duplicate codes. `Curs.matricular` validates the student and enforces age restrictions for the `AVANÇAT` level.
+- **Static utility classes** — `ServeiNotificacions` provides a pure static method `enviarConfirmacio` with no instance state.
+
+## Class summary
+
+| Class / Type | Kind | Role |
+|---|---|---|
+| `Academia` | Class | Central manager. Holds lists of `Instrument` objects, a map of `Profesor` objects keyed by DNI, and a list of `Curs` objects. Exposes `afegirPiano`, `afegirGuitarra`, `afegirCurs`, `afegirProfesor`, `getInstrument`, `getProfesor`, and `eliminarProfessor`. |
+| `Instrument` | Abstract class | Base type for rentable instruments. Declares the abstract `descriure()` method and exposes `getCodi()`. |
+| `Piano` | Class (extends `Instrument`) | Concrete instrument with `numTecles` (int) and `esElectronic` (boolean) fields. |
+| `Guitarra` | Class (extends `Instrument`) | Concrete instrument with `tipusCordes` (String) and `teAmplificador` (boolean, defaults to `false`) fields. |
+| `Curs` | Class (implements `Avaluable`) | Represents a course at a given `Nivell`. Manages enrolled students via a `Map<String, Alumne>` keyed by DNI. Exposes `matricular(Alumne)` and `calcularNotaFinal()`. |
+| `Alumne` | Class | Plain data object for a student: `nom`, `dni`, `edat`. Exposes `getNom()`, `getDni()`, `getEdat()`. |
+| `Profesor` | Class | Plain data object for a teacher: `nom`, `dni`, `especialitat`. Exposes `getDni()`. |
+| `Nivell` | Enum | Three-value enum: `INICIAL`, `INTERMEDI`, `AVANÇAT`. Used by `Curs` and `Academia.afegirCurs`. |
+| `Avaluable` | Interface | Single-method interface declaring `double calcularNotaFinal()`. |
+| `ServeiNotificacions` | Utility class | All-static class. `enviarConfirmacio(Alumne, String)` prints a confirmation message to stdout when a student is successfully enrolled. |
+
+## Class hierarchy
+
+```
+Academia
+├── instruments: List<Instrument>
+│   ├── Piano   (extends Instrument)
+│   └── Guitarra (extends Instrument)
+├── cursos: List<Curs>
+│   └── Curs    (implements Avaluable)
+│       └── alumnes: Map<String, Alumne>
+└── professors: Map<String, Profesor>
+
+Avaluable  <interface>
+    └── Curs
+
+Nivell  <enum>
+    INICIAL | INTERMEDI | AVANÇAT
+
+ServeiNotificacions  <static utility>
+```
+
+## How `Main.java` works
+
+`Main.java` is a hand-written test runner — not JUnit or any other test framework. It maintains two static counters (`ok` and `ko`) and uses a single helper method:
+
+```java
+private static void check(boolean cond, String msg) {
+    if (cond) { ok++; System.out.println("[PASS] " + msg); }
+    else       { ko++; System.out.println("[FAIL] " + msg); }
+}
+```
+
+`main` calls ten private test methods in sequence, each printing a section header and a series of `[PASS]`/`[FAIL]` lines. At the end, it prints the total pass and fail counts under `=== RESULTAT ===`.
+
+The ten test methods cover:
+
+| Test method | What it exercises |
+|---|---|
+| `provarAcademiaAfegirPiano` | Validation of all `afegirPiano` parameters |
+| `provarAcademiaAfegirGuitarra` | Validation of all `afegirGuitarra` parameters |
+| `provarAcademiaAfegirCurs` | Validation of all `afegirCurs` parameters including `null` `Nivell` |
+| `provarAcademiaAfegirProfesor` | Validation of all `afegirProfesor` parameters and duplicate DNI guard |
+| `provarAcademiaGetInstrument` | Index-based retrieval and out-of-bounds handling |
+| `provarAcademiaGetProfesorIEliminar` | Lookup by DNI and removal of professors |
+| `provarAlumne` | Basic getter correctness on `Alumne` |
+| `provarProfesor` | Basic getter correctness on `Profesor` |
+| `provarCursMatricular` | Enrollment validation per `Nivell`, duplicate DNI guard, `null` student |
+| `provarCursCalcularNotaFinal` | Current return value of `calcularNotaFinal()` |
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Domain overview" icon="sitemap" href="/domain/overview">
+    Understand the full domain model and how the classes relate to each other.
+  </Card>
+  <Card title="Instruments" icon="music" href="/domain/instruments">
+    Deep-dive into `Instrument`, `Piano`, and `Guitarra` — fields, constructors, and `descriure()`.
+  </Card>
+  <Card title="Academia reference" icon="building-columns" href="/reference/academia">
+    Full method-level reference for the `Academia` class, including validation rules.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Compile and run the project in two commands and read the test output.
+  </Card>
+</CardGroup>

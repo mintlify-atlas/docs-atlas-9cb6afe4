@@ -1,0 +1,156 @@
+---
+title: "Curs"
+description: "Full reference for the Curs class and the Avaluable interface it implements."
+---
+
+`Curs` represents a music course offered by the academy. It implements the `Avaluable` interface and manages an enrolled student roster keyed by DNI.
+
+<Warning>
+**Two bugs exist in the current source:**
+
+1. **Return type mismatch in `calcularNotaFinal`**: The `Avaluable` interface declares `double calcularNotaFinal()`, but the `Curs` implementation is declared `public boolean calcularNotaFinal()` and contains a syntax error (`return 0.0}` — missing semicolon, mismatched brace). This will not compile as-is.
+
+2. **Inverted `validarAlumne` condition**: The enrollment guard `this.nivell != Nivell.AVANÇAT && alumne.getEdat() >= 16` blocks most valid enrollments. The intended logic is almost certainly `this.nivell != Nivell.AVANÇAT || alumne.getEdat() >= 16`. See the [`validarAlumne`](#validaralumne-private) section for full details.
+</Warning>
+
+---
+
+## Class declaration
+
+```java
+public class Curs implements Avaluable
+```
+
+### Fields
+
+| Field | Type | Modifier | Description |
+|---|---|---|---|
+| `codi` | `String` | `private final` | Unique course code. Set at construction; cannot change. |
+| `nom` | `String` | `private` | Display name of the course. |
+| `nivell` | `Nivell` | `private` | Difficulty level (`INICIAL`, `INTERMEDI`, or `AVANÇAT`). |
+| `alumnes` | `Map<String, Alumne>` | `private final` | Enrolled students, keyed by DNI. Initialized as a `HashMap`. |
+| `instrument` | `Instrument` | `private` | The instrument associated with the course. |
+
+### Constructor
+
+```java
+public Curs(String codi, String nom, Nivell nivell, Instrument instrument)
+```
+
+The four-argument constructor sets all fields and initializes `alumnes` as an empty `HashMap`.
+
+```java
+Instrument piano = new Piano("P1", "Yamaha C3", 120.0, 88, false);
+Curs curs = new Curs("C1", "Piano Inicial", Nivell.INICIAL, piano);
+```
+
+<Warning>
+**Constructor arity mismatch**: `Academia.afegirCurs()` calls `new Curs(codi, nom, nivell)` with only **three** arguments, but the only constructor defined in `Curs` requires **four** (`codi`, `nom`, `nivell`, `instrument`). This will cause a compilation error. Either a three-argument constructor needs to be added to `Curs`, or `Academia.afegirCurs` needs to be updated to supply an `Instrument`.
+</Warning>
+
+---
+
+## Public methods
+
+### `matricular`
+
+```java
+public boolean matricular(Alumne alumne)
+```
+
+Attempts to enroll an `Alumne` in this course.
+
+<ParamField path="alumne" type="Alumne" required>
+  The student to enroll. Must not be `null`. Their DNI must not already be registered in this course.
+</ParamField>
+
+**Returns** `true` if enrollment succeeded. Returns `false` if `validarAlumne` rejects the student (see below).
+
+On success, `ServeiNotificacions.enviarConfirmacio(alumne, this.nom)` is called, which prints a confirmation to standard output:
+
+```
+Nom de l'alumne: <alumne.getNom()>
+Nom del curs: <this.nom>
+```
+
+```java
+Alumne alumne = new Alumne("Laia", "333C", 17);
+Curs curs = new Curs("C1", "Piano Avançat", Nivell.AVANÇAT, piano);
+
+boolean enrolled = curs.matricular(alumne);
+// Enrollment result depends on validarAlumne — see bug note below
+```
+
+---
+
+### `calcularNotaFinal`
+
+```java
+@Override
+public boolean calcularNotaFinal()  // BUG: should be double
+```
+
+Implements `Avaluable.calcularNotaFinal()`. The current source declares the return type as `boolean` (wrong — interface requires `double`) and contains a syntax error on the return statement (`return 0.0}`).
+
+The intended stub return value is `0.0`. Once the bugs are fixed, the corrected implementation should read:
+
+```java
+@Override
+public double calcularNotaFinal() {
+    return 0.0;
+}
+```
+
+---
+
+### `getCodi`
+
+```java
+public String getCodi()
+```
+
+Returns the course's unique code (`codi`). Used by `Academia.validarCurs()` when checking for duplicate course codes.
+
+```java
+Curs curs = new Curs("C1", "Piano Inicial", Nivell.INICIAL, piano);
+String code = curs.getCodi(); // → "C1"
+```
+
+---
+
+## `validarAlumne` (private)
+
+```java
+private boolean validarAlumne(Alumne alumne)
+```
+
+Called internally by `matricular`. Returns `true` only when all three conditions pass:
+
+1. `alumne` is not `null`
+2. `alumne.getDni()` is not already a key in `this.alumnes`
+3. The expression `this.nivell != Nivell.AVANÇAT && alumne.getEdat() >= 16` is `true`
+
+**As-coded behavior of condition 3:**
+
+The `&&` operator means the student is allowed only when **both** sub-conditions are true simultaneously:
+
+- The course is **not** AVANÇAT (`this.nivell != Nivell.AVANÇAT`)
+- The student is at least 16 years old (`alumne.getEdat() >= 16`)
+
+This has two unintended consequences:
+
+- Students under 16 cannot enroll in **any** course, including INICIAL and INTERMEDI.
+- Students of any age cannot enroll in AVANÇAT courses — the first sub-condition is always `false` for AVANÇAT.
+
+**Intended behavior** (most likely):
+
+The condition should use `||` so that a student may enroll if the course is not AVANÇAT **or** they are old enough:
+
+```java
+// Intended fix
+return this.nivell != Nivell.AVANÇAT || alumne.getEdat() >= 16;
+```
+
+Under the fixed logic:
+- INICIAL / INTERMEDI: students of any age may enroll.
+- AVANÇAT: only students aged 16 or older may enroll.

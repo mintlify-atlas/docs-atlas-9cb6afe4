@@ -1,0 +1,150 @@
+---
+title: "Alumne & Profesor"
+description: "Reference for the Alumne and Profesor entity classes used throughout the academy system."
+---
+
+`Alumne` and `Profesor` are plain entity classes that hold personal data for students and teachers respectively. Neither class extends any base class or implements any interface.
+
+---
+
+## Class `Alumne`
+
+```java
+public class Alumne
+```
+
+Represents a student enrolled (or to be enrolled) in a course.
+
+### Fields
+
+| Field | Type | Modifier | Description |
+|---|---|---|---|
+| `nom` | `String` | `private` | Full name of the student. |
+| `dni` | `String` | `private` | National identity number. Used as the enrollment key in `Curs.alumnes`. |
+| `edat` | `int` | `private` | Age of the student. Used by `Curs.validarAlumne` to enforce the AVANÇAT age restriction. |
+
+### Constructor
+
+```java
+public Alumne(String nom, String dni, int edat)
+```
+
+Sets all three fields directly. No validation is performed.
+
+```java
+Alumne alumne = new Alumne("Laia", "333C", 15);
+```
+
+### Public methods
+
+#### `getNom()`
+
+```java
+public String getNom()
+```
+
+Returns the student's full name. Called by `ServeiNotificacions.enviarConfirmacio` when printing the enrollment confirmation.
+
+```java
+alumne.getNom(); // → "Laia"
+```
+
+#### `getDni()`
+
+```java
+public String getDni()
+```
+
+Returns the student's DNI. Used as the map key in `Curs.alumnes` and checked in `Curs.validarAlumne` to prevent duplicate enrollment.
+
+```java
+alumne.getDni(); // → "333C"
+```
+
+#### `getEdat()`
+
+```java
+public int getEdat()
+```
+
+Returns the student's age. Compared against `16` in `Curs.validarAlumne` to enforce the AVANÇAT course age restriction.
+
+```java
+alumne.getEdat(); // → 15
+```
+
+---
+
+## Class `Profesor`
+
+```java
+public class Profesor
+```
+
+Represents a teacher registered in the academy. Instances are stored in `Academia.professors`, keyed by DNI.
+
+### Fields
+
+| Field | Type | Modifier | Description |
+|---|---|---|---|
+| `nom` | `String` | `private` | Full name of the professor. |
+| `dni` | `String` | `private` | National identity number. Used as the map key in `Academia.professors`. |
+| `especialitat` | `String` | `private` | Teaching specialty (e.g. `"Piano"`, `"Cant"`, `"Guitarra"`). |
+
+<Note>
+`nom` and `especialitat` have no getter methods in the current implementation. Only `getDni()` is exposed publicly. To access the name or specialty after construction, these getters would need to be added.
+</Note>
+
+### Constructor
+
+```java
+public Profesor(String nom, String dni, String especialitat)
+```
+
+Sets all three fields directly. No validation is performed at this level — validation occurs in `Academia.validarProfesor` before the constructor is called.
+
+```java
+Profesor profesor = new Profesor("Marta", "444D", "Cant");
+```
+
+### Public methods
+
+#### `getDni()`
+
+```java
+public String getDni()
+```
+
+Returns the professor's DNI. Used by `Academia` to look up and remove professors from the `professors` map.
+
+```java
+profesor.getDni(); // → "444D"
+```
+
+---
+
+## Constructor examples
+
+```java
+// Student aged 15 — will be blocked from AVANÇAT courses
+Alumne alumne = new Alumne("Laia", "333C", 15);
+
+// Professor specializing in Cant
+Profesor profesor = new Profesor("Marta", "444D", "Cant");
+```
+
+## Typical usage with Academia
+
+```java
+Academia a = new Academia("AC1", "Acadèmia Harmonia");
+
+// Register a professor through the academy (includes validation)
+a.afegirProfesor("Marta", "444D", "Cant");
+
+// Retrieve the professor by DNI
+Profesor p = a.getProfesor("444D");
+
+// Create an alumne and enroll them in a course
+Alumne alumne = new Alumne("Laia", "333C", 17);
+// curs.matricular(alumne) — see Curs reference
+```

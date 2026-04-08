@@ -1,0 +1,119 @@
+---
+title: "Students and Teachers"
+description: "Alumne and Profesor entities — their fields, constructors, getters, and how they are stored in the system."
+---
+
+## Alumne
+
+`Alumne` is a plain entity representing a student. It has no internal collections or business logic — it is a data carrier consumed by `Curs.matricular()`.
+
+**Fields**
+
+| Field | Type | Description |
+|---|---|---|
+| `nom` | `String` | Full name of the student |
+| `dni` | `String` | National identity number; used as the primary key inside `Curs` |
+| `edat` | `int` | Age in years; checked against enrollment rules in `Curs.validarAlumne()` |
+
+**Constructor**
+
+```java
+public Alumne(String nom, String dni, int edat)
+```
+
+All three fields are assigned directly. There is no defensive validation inside the constructor — callers are responsible for providing meaningful values.
+
+```java
+Alumne alumne = new Alumne("Maria García", "12345678A", 17);
+```
+
+**Getters**
+
+```java
+public String getNom()   // returns nom
+public String getDni()   // returns dni
+public int    getEdat()  // returns edat
+```
+
+All three fields are accessible but there are no setters — `nom`, `dni`, and `edat` are effectively immutable once set (the fields are `private` and only exposed through getters).
+
+### Identification by DNI inside a course
+
+When a student is enrolled via `Curs.matricular(alumne)`, the student is inserted into the course's `alumnes` map using `alumne.getDni()` as the key:
+
+```java
+alumnes.put(alumne.getDni(), alumne);
+```
+
+Before insertion, `validarAlumne()` calls `alumnes.containsKey(alumne.getDni())` to detect and reject duplicate enrollments. This means a student with the same `dni` cannot be enrolled in the same course twice, regardless of whether a different `Alumne` object is used.
+
+---
+
+## Profesor
+
+`Profesor` is a plain entity representing a teacher. Like `Alumne`, it carries data only and contains no business logic.
+
+**Fields**
+
+| Field | Type | Description |
+|---|---|---|
+| `nom` | `String` | Full name of the teacher |
+| `dni` | `String` | National identity number; used as the key in `Academia.professors` |
+| `especialitat` | `String` | Teaching specialty (e.g. `"Piano"`, `"Guitarra"`) |
+
+**Constructor**
+
+```java
+public Profesor(String nom, String dni, String especialitat)
+```
+
+```java
+Profesor profesor = new Profesor("Joan Puig", "87654321B", "Piano");
+```
+
+**Getter**
+
+```java
+public String getDni()
+```
+
+`getDni()` is the only getter defined. `nom` and `especialitat` are not directly accessible from outside the class — there are no `getNom()` or `getEspecialitat()` methods.
+
+### Storage in Academia
+
+`Academia` stores all teachers in a `HashMap<String, Profesor>` named `professors`, keyed by DNI:
+
+```java
+private final Map<String, Profesor> professors;
+```
+
+Teachers are added, retrieved, and removed exclusively through `Academia` methods:
+
+```java
+// Add — validates non-null/non-empty fields and rejects duplicate DNIs
+academia.afegirProfesor("Joan Puig", "87654321B", "Piano");
+
+// Retrieve by DNI — prints a message and returns null if not found
+Profesor p = academia.getProfesor("87654321B");
+
+// Remove by DNI — prints a message and returns false if not found
+academia.eliminarProfessor("87654321B");
+```
+
+`afegirProfesor()` calls `validarProfesor()` before constructing the object. Validation rejects any call where `nom`, `dni`, or `especialitat` is null or blank, and also rejects a DNI that already exists as a key in `professors`. This guarantees each teacher appears at most once in the map.
+
+---
+
+## Constructing both entities directly
+
+Although `Academia` enforces uniqueness for teachers, `Alumne` and `Profesor` are plain classes and can be constructed directly at any point:
+
+```java
+// Student — used when enrolling into a Curs
+Alumne alumne = new Alumne("Laura Martínez", "11223344C", 14);
+
+// Teacher — typically passed through Academia.afegirProfesor() instead
+Profesor profesor = new Profesor("Joan Puig", "87654321B", "Piano");
+```
+
+Constructing a `Profesor` directly and bypassing `Academia.afegirProfesor()` skips the uniqueness check. Always prefer the `Academia` method to ensure the teacher is properly registered and deduplicated.

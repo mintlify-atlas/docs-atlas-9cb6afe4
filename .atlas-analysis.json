@@ -1,0 +1,52 @@
+{
+  "projectType": "general",
+  "projectName": "Exercici Implementació Repàs",
+  "projectDescription": "A Java OOP practice exercise implementing a music academy management system with instruments, courses, students, and teachers using inheritance, interfaces, and enums.",
+  "theme": "palm",
+  "primaryColor": "#3B6CA8",
+  "lightColor": "#EEF3FB",
+  "darkColor": "#1E3A5F",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Introduction",
+        "pages": ["introduction", "quickstart"]
+      },
+      {
+        "group": "Domain Model",
+        "pages": ["domain/overview", "domain/instruments", "domain/courses", "domain/people"]
+      },
+      {
+        "group": "Guides",
+        "pages": ["guides/validation-rules", "guides/enrollment", "guides/notifications"]
+      },
+      {
+        "group": "Reference",
+        "pages": ["reference/academia", "reference/instrument", "reference/curs", "reference/alumne-profesor", "reference/avaluable", "reference/nivell"]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Music academy management with instrument catalog (Piano, Guitar)",
+    "Course enrollment with level-based age restrictions (INICIAL, INTERMEDI, AVANÇAT)",
+    "Teacher registry with DNI-based deduplication",
+    "Input validation on all entity creation operations",
+    "Notification service for enrollment confirmations",
+    "OOP design using inheritance, abstract classes, interfaces, and enums"
+  ],
+  "publicApiSurface": [
+    "Academia.afegirPiano(codi, nom, preuLloguer, numTecles, esElectronic)",
+    "Academia.afegirGuitarra(codi, nom, preuLloguer, tipusCordes)",
+    "Academia.afegirCurs(codi, nom, nivell)",
+    "Academia.afegirProfesor(nom, dni, especialitat)",
+    "Academia.getInstrument(posicio)",
+    "Academia.getProfesor(dni)",
+    "Academia.eliminarProfessor(dni)",
+    "Curs.matricular(alumne)",
+    "Curs.calcularNotaFinal()",
+    "Instrument.descriure()",
+    "Avaluable.calcularNotaFinal()",
+    "ServeiNotificacions.enviarConfirmacio(alumne, nomCurs)",
+    "Nivell enum: INICIAL, INTERMEDI, AVANÇAT"
+  ]
+}

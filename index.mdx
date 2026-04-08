@@ -1,97 +1,55 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Music Academy — Java OOP Exercise"
+description: "A Java OOP exercise implementing a music academy management system with instruments, courses, students, and teachers."
 ---
 
-## Setting up
+This project is a hands-on Java exercise that models a music academy using core object-oriented programming concepts: **inheritance**, **abstract classes**, **interfaces**, and **enums**. It covers managing instruments, courses, students, and teachers — all with robust input validation and enrollment logic.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Compile and run the test suite in minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Domain Model" icon="diagram-project" href="/domain/overview">
+    Understand the class hierarchy and relationships.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Enrollment Guide" icon="graduation-cap" href="/guides/enrollment">
+    Learn how course enrollment and level restrictions work.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="API Reference" icon="code" href="/reference/academia">
+    Full method-by-method reference for every class.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What this project covers
 
-Everything you need to create world-class documentation.
+<Steps>
+  <Step title="Academy management">
+    The `Academia` class manages a catalog of instruments (pianos and guitars), a list of courses, and a registry of teachers — all keyed by unique codes or DNI identifiers.
+  </Step>
+  <Step title="Instrument catalog">
+    `Piano` and `Guitarra` both extend the abstract `Instrument` class. Each instrument has a rental price, a unique code, and type-specific attributes (key count for piano, string type for guitar).
+  </Step>
+  <Step title="Course enrollment">
+    `Curs` enforces level-based enrollment rules using the `Nivell` enum (`INICIAL`, `INTERMEDI`, `AVANÇAT`). Advanced courses require students to be 16 or older.
+  </Step>
+  <Step title="Notifications">
+    When a student successfully enrolls, `ServeiNotificacions.enviarConfirmacio()` automatically prints a confirmation with the student's name and course name.
+  </Step>
+</Steps>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Key design patterns
 
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Inheritance & abstraction" icon="sitemap" href="/domain/instruments">
+    `Piano` and `Guitarra` extend the abstract `Instrument` class, which enforces a `descriure()` method on all instruments.
+  </Card>
+  <Card title="Interface contract" icon="file-contract" href="/reference/avaluable">
+    `Curs` implements the `Avaluable` interface, committing to a `calcularNotaFinal()` method for grade calculation.
+  </Card>
+  <Card title="Enum levels" icon="list-ol" href="/reference/nivell">
+    The `Nivell` enum defines three course levels and drives enrollment age-restriction logic.
+  </Card>
+  <Card title="Validation rules" icon="shield-check" href="/guides/validation-rules">
+    Every factory method validates its inputs — null checks, empty string checks, duplicate code checks, and positive-value checks.
+  </Card>
+</CardGroup>

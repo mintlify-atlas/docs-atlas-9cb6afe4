@@ -1,0 +1,59 @@
+---
+title: "Domain Model Overview"
+description: "Overview of the music academy class hierarchy and how its components relate to each other."
+---
+
+## System Overview
+
+`Academia` is the central aggregate of this system. It owns three collections: a `List<Instrument>` of all registered instruments, a `List<Curs>` of all courses, and a `Map<String, Profesor>` of teachers keyed by DNI. Nothing is created in isolation — instruments and teachers are always added through `Academia` factory methods that enforce uniqueness and validation before constructing any object.
+
+Instruments form a polymorphic hierarchy rooted at the abstract class `Instrument`. Concrete subclasses `Piano` and `Guitarra` each override the abstract `descriure()` method with type-specific output. Because instrument creation goes through `Academia.afegirPiano()` and `Academia.afegirGuitarra()`, validation (non-empty codes, positive rental price, unique `codi`) is always applied.
+
+Courses (`Curs`) hold an enrolled student roster as a `Map<String, Alumne>` keyed by the student's DNI, preventing duplicate registrations. Each course has a `Nivell` (INICIAL, INTERMEDI, or AVANÇAT) that drives enrollment eligibility checks in `validarAlumne()`. `Curs` implements the `Avaluable` interface, which requires a `calcularNotaFinal()` method returning a `double`.
+
+Teachers (`Profesor`) are plain entities stored in `Academia`'s `professors` map. Retrieval and removal are both keyed by DNI via `getProfesor(String dni)` and `eliminarProfessor(String dni)`.
+
+## Class Inventory
+
+| Class / Type | Kind | Key Responsibility |
+|---|---|---|
+| `Academia` | Concrete class | Central aggregate; owns instruments, courses, and teachers |
+| `Instrument` | Abstract class | Base type for all instruments; defines `codi`, `nom`, `preuLloguer`, and abstract `descriure()` |
+| `Piano` | Concrete class | Extends `Instrument`; adds `numTecles` and `esElectronic` |
+| `Guitarra` | Concrete class | Extends `Instrument`; adds `tipusCordes`; `teAmplificador` always `false` |
+| `Curs` | Concrete class | Manages student enrollment with level-based rules; implements `Avaluable` |
+| `Alumne` | Concrete class | Student entity with `nom`, `dni`, and `edat` |
+| `Profesor` | Concrete class | Teacher entity with `nom`, `dni`, and `especialitat` |
+| `Nivell` | Enum | Enrollment levels: `INICIAL`, `INTERMEDI`, `AVANÇAT` |
+| `Avaluable` | Interface | Contract for gradeable entities; requires `calcularNotaFinal()` |
+
+## Relationships
+
+```
+Academia
+├── List<Instrument>   ──▶  Instrument (abstract)
+│                               ├── Piano
+│                               └── Guitarra
+├── List<Curs>         ──▶  Curs  implements Avaluable
+│                               └── Map<String, Alumne>  (keyed by DNI)
+└── Map<String, Profesor>  (keyed by DNI)
+```
+
+- `Academia` aggregates all top-level domain objects.
+- `Curs` contains its own `Alumne` roster; students are not globally registered.
+- `Piano` and `Guitarra` are the only concrete `Instrument` subclasses.
+- `Curs` is the only class that implements `Avaluable`.
+
+## Explore Further
+
+<CardGroup cols={3}>
+  <Card title="Instruments" icon="music" href="/domain/instruments">
+    The abstract Instrument hierarchy and Piano / Guitarra subclasses
+  </Card>
+  <Card title="Courses" icon="graduation-cap" href="/domain/courses">
+    Curs enrollment logic, Nivell enum, and the Avaluable interface
+  </Card>
+  <Card title="Students and Teachers" icon="users" href="/domain/people">
+    Alumne and Profesor entities and how they are stored
+  </Card>
+</CardGroup>

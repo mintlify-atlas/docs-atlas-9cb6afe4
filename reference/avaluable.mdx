@@ -1,0 +1,65 @@
+---
+title: "Avaluable Interface"
+description: "The Avaluable interface that establishes the contract for grade calculation across evaluable entities."
+---
+
+`Avaluable` is a single-method interface that any evaluable entity in the system must implement. It establishes a contract: every implementing class must be able to calculate and return a final numeric grade.
+
+## Interface declaration
+
+```java
+public interface Avaluable {
+    public double calcularNotaFinal();
+}
+```
+
+The interface declares one method with no default implementation. Any class that implements `Avaluable` must provide a concrete body for `calcularNotaFinal()`.
+
+---
+
+## Method: `calcularNotaFinal`
+
+```java
+double calcularNotaFinal()
+```
+
+**Returns** a `double` representing the final computed grade for the evaluable entity.
+
+The return value is unconstrained by the interface — it is up to each implementing class to define the grading scale and computation logic.
+
+---
+
+## Implementing class: `Curs`
+
+```java
+public class Curs implements Avaluable
+```
+
+`Curs` is the only class in the current system that implements `Avaluable`. The implementation contract is declared in the class header:
+
+```java
+public class Curs implements Avaluable {
+    // ...
+
+    @Override
+    public double calcularNotaFinal() {
+        return 0.0; // stub — not yet implemented
+    }
+}
+```
+
+<Note>
+The current `Curs` implementation is a **stub** that returns `0.0` unconditionally. No actual grade calculation logic has been written yet. Additionally, the source file contains two bugs in this method: the return type is incorrectly declared as `boolean` instead of `double`, and the return statement has a syntax error (`return 0.0}` — missing semicolon and mismatched brace). Both must be fixed before the code will compile. See the [Curs reference](/reference/curs) for details.
+</Note>
+
+---
+
+## Design purpose
+
+The `Avaluable` interface decouples the grade-calculation contract from any specific entity type. By programming to this interface rather than to `Curs` directly, future entities — such as individual instrument assessments or teacher evaluations — can be made evaluable without changing calling code:
+
+```java
+// Any Avaluable can be asked for its final grade
+Avaluable evaluable = new Curs("C1", "Piano Inicial", Nivell.INICIAL, instrument);
+double nota = evaluable.calcularNotaFinal(); // → 0.0 (stub)
+```

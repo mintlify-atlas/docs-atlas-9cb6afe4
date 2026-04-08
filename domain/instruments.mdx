@@ -1,0 +1,134 @@
+---
+title: "Instruments"
+description: "The instrument class hierarchy — abstract base Instrument and concrete subclasses Piano and Guitarra."
+---
+
+## Instrument (abstract)
+
+`Instrument` is the abstract base class for all instruments in the academy. It declares three protected fields shared by every subclass and one abstract method that each subclass must implement.
+
+**Fields**
+
+| Field | Type | Modifier | Description |
+|---|---|---|---|
+| `codi` | `String` | `protected final` | Unique instrument code; set once at construction |
+| `nom` | `String` | `protected` | Human-readable instrument name |
+| `preuLloguer` | `double` | `protected` | Daily rental price |
+
+**Constructor**
+
+```java
+public Instrument(String codi, String nom, double preuLloguer)
+```
+
+Called via `super(...)` from every subclass constructor.
+
+**Abstract method**
+
+```java
+public abstract void descriure();
+```
+
+Each concrete subclass prints a formatted description to stdout. There is no return value.
+
+**Getter**
+
+```java
+public String getCodi()
+```
+
+Returns the instrument's `codi`. This is used by `Academia.validarInstrument()` to check for duplicate codes before adding a new instrument to the list.
+
+---
+
+## Piano
+
+`Piano` extends `Instrument` and adds two fields specific to keyboard instruments.
+
+**Additional fields**
+
+| Field | Type | Description |
+|---|---|---|
+| `numTecles` | `int` | Number of keys on the piano |
+| `esElectronic` | `boolean` | Whether the piano is electronic |
+
+**Constructor**
+
+```java
+public Piano(String codi, String nom, double preuLloguer, int numTecles, boolean esElectronic)
+```
+
+Delegates the first three arguments to `Instrument`'s constructor via `super(codi, nom, preuLloguer)`, then assigns `numTecles` and `esElectronic`.
+
+**`descriure()` output**
+
+```java
+// prints: "Piano: <nom> <numTecles> <esElectronic>"
+System.out.println("Piano: " + this.nom + " " + this.numTecles + " " + this.esElectronic);
+```
+
+Example output for a 88-key acoustic piano:
+
+```
+Piano: Yamaha U1 88 false
+```
+
+---
+
+## Guitarra
+
+`Guitarra` extends `Instrument` and adds fields specific to string instruments.
+
+**Additional fields**
+
+| Field | Type | Description |
+|---|---|---|
+| `tipusCordes` | `String` | String type (e.g. `"nylon"`, `"acer"`) |
+| `teAmplificador` | `boolean` | Always `false` — hardcoded in the constructor body |
+
+`teAmplificador` is declared as an instance field but the constructor always sets it to `false`. There is no way to pass `true` through `Academia.afegirGuitarra()` or the constructor itself.
+
+**Constructor**
+
+```java
+public Guitarra(String codi, String nom, double preuLloguer, String tipusCordes)
+```
+
+Note: there is no `teAmplificador` parameter. The field is initialised to `false` unconditionally.
+
+**`descriure()` output**
+
+```java
+// prints: "Guitarra: <nom> <tipusCordes>"
+System.out.println("Guitarra: " + this.nom + " " + this.tipusCordes);
+```
+
+Example output:
+
+```
+Guitarra: Fender Stratocaster acer
+```
+
+---
+
+## Creating instruments
+
+<Note>
+  Instruments must always be added through the `Academia` factory methods, never by calling `new Piano(...)` or `new Guitarra(...)` directly. The factory methods run `validarInstrument()` before construction, which checks that `codi` and `nom` are non-null and non-empty, that `preuLloguer` is greater than zero, and that no existing instrument already uses the same `codi`.
+</Note>
+
+```java
+Academia academia = new Academia("AC1", "Escola de Música");
+
+// Add a piano — numTecles must be > 0
+academia.afegirPiano("P1", "Yamaha U1", 25.0, 88, false);
+
+// Add a guitar — tipusCordes must be non-null and non-empty
+academia.afegirGuitarra("G1", "Fender Stratocaster", 15.0, "acer");
+
+// Retrieve by position (0-indexed)
+Instrument instrument = academia.getInstrument(0); // returns the Piano
+instrument.descriure(); // prints: Piano: Yamaha U1 88 false
+```
+
+Both methods return `false` (and do not add the instrument) if validation fails. For `afegirPiano`, an additional guard rejects `numTecles <= 0`. For `afegirGuitarra`, a null or blank `tipusCordes` is rejected.

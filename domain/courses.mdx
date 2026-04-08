@@ -1,0 +1,153 @@
+---
+title: "Courses"
+description: "Course management and student enrollment logic, including the Nivell enum and the Avaluable interface."
+---
+
+## Curs
+
+`Curs` represents a music course. It holds an enrolled student roster, references the instrument used in the course, and enforces level-based enrollment rules.
+
+**Fields**
+
+| Field | Type | Modifier | Description |
+|---|---|---|---|
+| `codi` | `String` | `private final` | Unique course code |
+| `nom` | `String` | `private` | Course name |
+| `nivell` | `Nivell` | `private` | Difficulty level driving enrollment rules |
+| `alumnes` | `Map<String, Alumne>` | `private final` | Enrolled students, keyed by `Alumne.dni` |
+| `instrument` | `Instrument` | `private` | The instrument taught in this course |
+
+**Constructor**
+
+```java
+public Curs(String codi, String nom, Nivell nivell, Instrument instrument)
+```
+
+The `alumnes` map is initialised as an empty `HashMap` inside the constructor. Example:
+
+```java
+Instrument piano = academia.getInstrument(0);
+Curs curs = new Curs("C1", "Piano Inicial", Nivell.INICIAL, piano);
+```
+
+**Getter**
+
+```java
+public String getCodi()
+```
+
+Used by `Academia.validarCurs()` to prevent duplicate course codes.
+
+---
+
+## Nivell enum
+
+`Nivell` is a simple enum with three constants representing the progression of difficulty:
+
+```java
+public enum Nivell {
+    INICIAL, INTERMEDI, AVANÇAT
+}
+```
+
+| Constant | Intended audience |
+|---|---|
+| `INICIAL` | Beginners; no age restriction (intended behavior) |
+| `INTERMEDI` | Intermediate students; no age restriction (intended behavior) |
+| `AVANÇAT` | Advanced students; intended to require age ≥ 16 |
+
+The `nivell` field of a `Curs` is read inside `validarAlumne()` to decide whether an enrollment attempt should be accepted or rejected.
+
+---
+
+## Enrollment
+
+### `matricular(Alumne alumne)`
+
+```java
+public boolean matricular(Alumne alumne)
+```
+
+Attempts to enroll a student. The method:
+
+1. Calls `validarAlumne(alumne)` — returns `false` immediately if validation fails.
+2. Adds the student to `alumnes` using their `dni` as the key (preventing duplicate enrollments).
+3. Calls `ServeiNotificacions.enviarConfirmacio(alumne, this.nom)` to send a confirmation notification.
+4. Returns `true`.
+
+```java
+Alumne alumne = new Alumne("Maria García", "12345678A", 17);
+boolean enrolled = curs.matricular(alumne); // true if validation passes
+```
+
+### `validarAlumne(Alumne alumne)` — private
+
+This method guards `matricular`. It rejects enrollment if:
+
+- `alumne` is `null`.
+- The student's `dni` already exists as a key in `alumnes` (duplicate prevention).
+- The level/age condition (see warning below) evaluates to `false`.
+
+<Warning>
+  **Inverted validation logic in `validarAlumne`**
+
+  The current implementation contains a logic bug. The condition on line 37 reads:
+
+  ```java
+  return this.nivell != Nivell.AVANÇAT && alumne.getEdat() >= 16;
+  ```
+
+  This means enrollment is **only allowed** when the course is NOT `AVANÇAT` AND the student is 16 or older. The intended behavior is the opposite: all levels should accept any age, but `AVANÇAT` should additionally require age ≥ 16.
+
+  The correct condition should be:
+
+  ```java
+  return this.nivell != Nivell.AVANÇAT || alumne.getEdat() >= 16;
+  ```
+
+  As written, the current code blocks students under 16 from all levels (including `INICIAL` and `INTERMEDI`), and simultaneously blocks all students from `AVANÇAT` regardless of age.
+</Warning>
+
+---
+
+## Avaluable interface
+
+`Curs` implements the `Avaluable` interface:
+
+```java
+public interface Avaluable {
+    public double calcularNotaFinal();
+}
+```
+
+The current `Curs` implementation satisfies the contract with a stub that always returns `0.0`. No actual grade calculation logic is present yet:
+
+```java
+@Override
+public boolean calcularNotaFinal() { return 0.0; }
+```
+
+Note: the method signature in `Curs` incorrectly declares the return type as `boolean` instead of `double`, and the body contains a syntax error (missing semicolon). These are compile-time errors in the source that need to be fixed before the class will compile.
+
+The intended signature matching the interface is:
+
+```java
+@Override
+public double calcularNotaFinal() {
+    return 0.0;
+}
+```
+
+---
+
+## Adding courses through Academia
+
+Courses are created via `Academia.afegirCurs()`:
+
+```java
+public boolean afegirCurs(String codi, String nom, Nivell nivell)
+```
+
+`validarCurs()` checks that `codi` and `nom` are non-null and non-empty, that `nivell` is non-null, and that no existing course uses the same `codi`. If validation passes, a new `Curs` is constructed and appended to `cursos`.
+
+> **Note:** the `Academia.afegirCurs()` call passes only 3 arguments to `new Curs(...)`, but the `Curs` constructor requires 4 (including `instrument`). This is a compile-time mismatch in the source code that must be resolved — either by updating `afegirCurs` to accept and forward an `Instrument` argument, or by making `instrument` optional in `Curs`.
